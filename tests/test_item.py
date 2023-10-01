@@ -1,7 +1,7 @@
 """Здесь надо написать тесты с использованием pytest для модуля item."""
 
-from src.item import Item
-
+from src.item import Item, InstantiateCSVError,CSVError
+import os
 import pytest
 @pytest.fixture()
 def item2():
@@ -45,3 +45,19 @@ def test_str(item2):
     """
     assert str(item2) == 'Ноутбук'
 
+@pytest.fixture()
+def file_name():
+    return '../src/item.csv'
+
+def test_empty_csv(file_name):
+    """Тестирование пустого файла"""
+    with pytest.raises(FileNotFoundError):
+        path = os.path.join(os.path.dirname(__file__), '..', file_name)
+        Item.instantiate_from_csv(path)
+
+
+def test_broken_csv(file_name):
+    """Тестирование поврежденного файла"""
+    with pytest.raises(CSVError):
+        path = os.path.join(os.path.dirname(__file__), '..', file_name)
+        Item.instantiate_from_csv(path)

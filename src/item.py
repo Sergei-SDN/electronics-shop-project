@@ -1,6 +1,29 @@
 import csv
 import os
 
+
+class CSVError(Exception):
+
+    def __init__(self, *args, **kwargs):
+        self.message = args[0] if args else "Файл item.csv поврежден"
+
+    def __str__(self):
+        return self.message
+
+
+class InstantiateCSVError:
+    """Класс для проверки повреждения файла csv"""
+    def __init__(self, file_name):
+        path = os.path.join(os.path.dirname(__file__), '..', file_name)
+        with open(path, 'r', encoding='windows-1251') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+            headers = list(reader)[0]
+            if headers != ['name', 'price', 'quantity']:
+                raise CSVError
+            else:
+                self.file_name = file_name
+
+
 class Item:
     """
     Класс для представления товара в магазине.
@@ -66,23 +89,31 @@ class Item:
         self.price = self.price * self.pay_rate
 
     @classmethod
-    def instantiate_from_csv(cls, filename):
+    def instantiate_from_csv(cls, file_name):
 
         Item.all.clear()
 
-        path = os.path.join(os.path.dirname(__file__), '..', filename)
+        path = os.path.join(os.path.dirname(__file__), '..', file_name)
 
-        with open(path, 'r', encoding='windows-1251') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
-            for row in reader:
-                cls(row['name'], row['price'], row['quantity'])
+        try:
+            open(path, 'r', encoding='windows-1251')
+
+        except FileNotFoundError:
+            print('Отсутствует файл item.csv')
+
+        else:
+            try:
+                InstantiateCSVError(file_name)
+
+            except CSVError:
+                print('Файл item1.csv поврежден')
+
+            else:
+                with open(path, 'r', encoding='windows-1251') as csvfile:
+                    reader = csv.DictReader(csvfile, delimiter=',')
+                    for row in reader:
+                        cls(row['name'], row['price'], row['quantity'])
 
     @staticmethod
     def string_to_number(string: str):
         return int(float(string))
-
-
-item1 = Item("Смартфон", 10000, 20)
-assert repr(item1) == "Item('Смартфон', 10000, 20)"
-assert str(item1) == 'Смартфон'
-
