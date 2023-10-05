@@ -2,26 +2,13 @@ import csv
 import os
 
 
-class CSVError(Exception):
+class InstantiateCSVError(Exception):
 
     def __init__(self, *args, **kwargs):
-        self.message = args[0] if args else "Файл item.csv поврежден"
+        self.message = args[0] if args else "Файл items1.csv поврежден"
 
     def __str__(self):
         return self.message
-
-
-class InstantiateCSVError:
-    """Класс для проверки повреждения файла csv"""
-    def __init__(self, file_name):
-        path = os.path.join(os.path.dirname(__file__), '..', file_name)
-        with open(path, 'r', encoding='windows-1251') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
-            headers = list(reader)[0]
-            if headers != ['name', 'price', 'quantity']:
-                raise CSVError
-            else:
-                self.file_name = file_name
 
 
 class Item:
@@ -95,25 +82,21 @@ class Item:
 
         path = os.path.join(os.path.dirname(__file__), '..', file_name)
 
-        try:
-            open(path, 'r', encoding='windows-1251')
+        if not os.path.exists(path):
+            raise FileNotFoundError('Отсутствует файл item.csv')
 
-        except FileNotFoundError:
-            print('Отсутствует файл item.csv')
-
-        else:
-            try:
-                InstantiateCSVError(file_name)
-
-            except CSVError:
-                print('Файл item1.csv поврежден')
-
+        with open(path, 'r', encoding='windows-1251') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+            headers = list(reader)[0]
+            if headers != ['name', 'price', 'quantity']:
+                raise InstantiateCSVError
             else:
-                with open(path, 'r', encoding='windows-1251') as csvfile:
-                    reader = csv.DictReader(csvfile, delimiter=',')
-                    for row in reader:
-                        cls(row['name'], row['price'], row['quantity'])
+                for row in reader:
+                    cls(row['name'], row['price'], row['quantity'])
 
     @staticmethod
     def string_to_number(string: str):
         return int(float(string))
+
+
+
